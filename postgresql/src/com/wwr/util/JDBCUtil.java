@@ -55,16 +55,16 @@ public class JDBCUtil {
 						conn=DriverManager.getConnection(url, user, pwd);
 						mysqlTl.set(conn);
 						logger.info("获取"+dbType+"连接成功");
-					}else if(dbType.equals(PGSQL)){
-						conn=pgsqlTl.get();
-						if(conn==null){
-							url=jdbcProp.getProperty("pgsql.jdbc.driver");
-							user=jdbcProp.getProperty("pgsql.jdbc.user");
-							pwd=jdbcProp.getProperty("pgsql.jdbc.pwd");
-							conn=DriverManager.getConnection(url, user, pwd);
-							pgsqlTl.set(conn); 
-							logger.info("获取"+dbType+"连接成功");
-						}
+					}
+				}else if(dbType.equals(PGSQL)){
+					conn=pgsqlTl.get();
+					if(conn==null){
+						url=jdbcProp.getProperty("pgsql.jdbc.url");
+						user=jdbcProp.getProperty("pgsql.jdbc.user");
+						pwd=jdbcProp.getProperty("pgsql.jdbc.pwd");
+						conn=DriverManager.getConnection(url, user, pwd);
+						pgsqlTl.set(conn); 
+						logger.info("获取"+dbType+"连接成功");
 					}
 				}
 			} catch (Exception e) {
@@ -131,12 +131,14 @@ public class JDBCUtil {
 		List<Map<String,Object>> list=new ArrayList<Map<String,Object>>();
 		StringBuilder sb=new StringBuilder("select ");
 		for (String field : fields) {
-			sb.append(field+" ");
+			sb.append(field+",");
 		}
-		sb.append("from "+schame+"."+table+" limit ?,?");
+		String sql = sb.substring(0, sb.length()-1);
+		sql=sql+" from "+schame+"."+table+" limit ?,?";
+		logger.info("查询数据SQL-->"+sql);
 		Connection conn = getConnection(MYSQL);
 		try {
-			PreparedStatement ps = conn.prepareStatement(sb.toString());
+			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, index);
 			ps.setInt(2, size);
 			ResultSet rs = ps.executeQuery();
@@ -179,13 +181,13 @@ public class JDBCUtil {
 		StringBuffer afterSql=new StringBuffer();
 		
 		preSql.append("insert into "+table+"(");
-		afterSql.append("values(");
+		afterSql.append(" values(");
 		for (String field : fields) {
 			preSql.append(field+",");
 			afterSql.append("?,");
 		}
-		preSql.replace(preSql.length()-1, preSql.length()-1, ")");
-		afterSql.replace(preSql.length()-1, preSql.length()-1, ")");
+		preSql.deleteCharAt(preSql.length()-1).append(")");
+		afterSql.deleteCharAt(afterSql.length()-1).append(")");
 		String sql=preSql.toString()+afterSql.toString();
 		
 		try {
