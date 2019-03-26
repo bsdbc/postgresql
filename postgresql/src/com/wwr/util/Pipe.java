@@ -25,4 +25,8 @@ public class Pipe<T> {
 	 	pipe.drainTo(list,size);
 	 	return list;
 	}
+	
+	public synchronized int getSize(){
+		return pipe.size();
+	}
 }
